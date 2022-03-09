@@ -20,10 +20,10 @@ class UserService {
     await mailService.sendActivationMail(email, `${ process.env.API_URL }/api/activate/${ activationLink }`);
 
     const userDto = new UserDto(user);
-    const token = tokenService.generateTokens({ ...userDto });
-    await tokenService.saveToken(userDto.id, token.refreshToken);
+    const tokens = tokenService.generateTokens({ ...userDto });
+    await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-    return { ...token, user: userDto };
+    return { ...tokens, user: userDto };
   }
 
   async activate(activationLink) {
@@ -33,6 +33,23 @@ class UserService {
     }
     user.isActivated = true;
     await user.save();
+  }
+
+  async login(email, password) {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      throw ApiError.BadRequest(`User with email: ${ email } not found`);
+    }
+    const isPassEqual = await bcrypt.compare(password, user.password);
+    if (!isPassEqual) {
+      throw ApiError.BadRequest('Wrong password');
+    }
+    const userDto = new UserDto(user);
+    const tokens = tokenService.generateTokens({ ...userDto });
+
+    await tokenService.saveToken(userDto.id, tokens.refreshToken);
+
+    return { ...tokens, user: userDto };
   }
 }
 

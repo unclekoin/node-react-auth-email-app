@@ -1,9 +1,10 @@
 import React, {FC} from 'react';
+import LoginForm from "./components/login-form";
 
 const App: FC = () => {
     return (
         <div>
-            12345
+            <LoginForm />
         </div>
     );
 }
